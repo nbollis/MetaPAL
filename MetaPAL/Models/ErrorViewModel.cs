@@ -1,3 +1,5 @@
+using MetaPAL.Data;
+
 namespace MetaPAL.Models
 {
     public class ErrorViewModel

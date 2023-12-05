@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MetaPAL.Data;
 using MetaPAL.Models;
+using MetaPAL.DataOperations;
 using Microsoft.AspNetCore.Authorization;
+using Readers;
 
 namespace MetaPAL.Controllers
 {
@@ -26,6 +28,34 @@ namespace MetaPAL.Controllers
               return _context.SpectrumMatch != null ? 
                           View(await _context.SpectrumMatch.ToListAsync()) :
                           Problem("Entity set 'ApplicationDbContext.SpectrumMatch'  is null.");
+        }
+
+        // GET: UploadSpectrumMatchesForm
+        public async Task<IActionResult> UploadSpectrumMatchesForm()
+        {
+            return _context.SpectrumMatch != null ?
+                View() :
+                Problem("Entity set 'ApplicationDbContext.SpectrumMatch'  is null.");
+        }
+
+        // GET: UploadSpectrumMatches
+        public async Task<IActionResult> UploadSpectrumMatches(string PsmPath)
+        {
+            if (PsmPath.ParseFileType() != SupportedFileType.psmtsv)
+                return _context.SpectrumMatch != null
+                    ? View()
+                    : Problem("Entity set 'ApplicationDbContext.SpectrumMatch'  is null.");
+
+            var psms = SpectrumMatchTsvReader.ReadTsv(PsmPath, out _);
+
+            for (int i = 0; i < psms.Count; i++)
+            {
+                var match = SpectrumMatch.FromSpectrumMatchTsv(psms[i]);
+                _context.SpectrumMatch!.Add(match);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: ShowSearchForm
